@@ -1,7 +1,9 @@
-.PHONY: run i clean
+.PHONY: run test i clean
 
 run: main
 	./main < input
+test: main
+	./main < test
 i:
 	ghci main.hs
 clean:
