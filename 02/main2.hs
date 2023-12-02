@@ -62,12 +62,12 @@ validDraw (Draw num Blue)  = num <= 14
 
 {--
 GRAMMAR 
-S -> (Game "\n")+ eof
-Game -> "Game " num ": " Pull ("; " Pull)*
-Pull -> Draw (", " Draw)* 
-Draw -> num " " color
+S     -> (Game "\n")+ eof
+Game  -> "Game " num ": " Pull ("; " Pull)*
+Pull  -> Draw (", " Draw)* 
+Draw  -> num " " color
 color -> "red" | "green" | "blue"
-num -> [0-9]+
+num   -> [0-9]+
 --}
 
 data Power = Power
