@@ -3,18 +3,20 @@ import Data.Map qualified as M
 import Data.Either qualified as E
 import Data.Maybe (fromJust)
 
-solve :: String -> Int
-solve s = steps
-  where steps = mazeStep m inst "AAA"
-        m     = M.fromList $ snd p
-        inst  = cycle $ fst p
-        p     = E.fromRight ("",[("",("", ""))]) parsed
+solve :: String -> Integer
+solve s = foldr lcm 1 stepsL 
+  where steps  = mazeStep m inst "AAA"
+        stepsL = map (mazeStep m inst) starts
+        starts = M.keys $ M.filterWithKey (\k _ -> k!!2 == 'A') m
+        m      = M.fromList $ snd p
+        inst   = cycle $ fst p
+        p      = E.fromRight ("",[("",("", ""))]) parsed
         parsed = parse pFile "" s
 
-mazeStep :: M.Map String (String, String) -> String -> String -> Int
+mazeStep :: M.Map String (String, String) -> String -> String -> Integer
 mazeStep _ [] _ = 987654321
 mazeStep m (x:inst) curr
-  | curr == "ZZZ" = 0
+  | curr!!2 == 'Z' = 0
   | otherwise = 1 + mazeStep m inst newCurr
   where newCurr = which x (fromJust $ M.lookup curr m)
 
