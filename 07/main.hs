@@ -8,8 +8,29 @@ solve s = unwrap
         bets2  = sum <$> bets1
         bets1  = map (\((_, x), y) -> x*y) <$> bets0
         bets0  = (\x -> zip x [1..])  <$> sHands
-        sHands = sortBy (\(x,_) (y,_) -> sortHands x y) <$> ins 
+        sHands = sortBy (\(x,_) (y,_) -> sortHands x y) <$> ins
         ins = parse pFile "" s
+
+mostLetter :: String -> Char
+mostLetter s = fst $ last dumb
+  where dumb     = if null noJoke then [('A', 1)] else noJoke
+        noJoke   = filter (\(x, _) -> x /= 'J') sLetters
+        sLetters = sortBy sortLetters letters
+        letters  = countLetters s
+
+sortLetters :: (Char, Int) -> (Char, Int) -> Ordering
+sortLetters (c0, v0) (c1, v1)
+  | v0 /= v1 = compare v0 v1
+  | otherwise = compare (rankCard c0) (rankCard c1)
+
+countLetters :: String -> [(Char, Int)]
+countLetters s = zip s $ map (countLetter s) s
+
+countLetter :: String -> Char -> Int
+countLetter [] _ = 0
+countLetter (x:xs) c
+  | x == c = 1 + countLetter xs c
+  | otherwise = countLetter xs c
 
 pNum :: GenParser Char st Int
 pNum = read <$> many (oneOf "0123456789")
@@ -63,7 +84,7 @@ isThree (x:y:xs)
 
 isTwoPair [] = 0
 isTwoPair s
-  | (length (nub s) == 3) && (isThree s == 0) = 3
+  | length (nub s) == 3 = 3
   | otherwise = 0
 
 isPair :: String -> Int
@@ -80,7 +101,7 @@ rankCard c
   | c == 'A' = 14
   | c == 'K' = 13
   | c == 'Q' = 12
-  | c == 'J' = 11
+  | c == 'J' = 1
   | c == 'T' = 10
   | c == '9' = 9
   | c == '8' = 8
@@ -108,13 +129,30 @@ handVal s = maximum [isFive s, isFour s, isFullHouse s, isThree s, isTwoPair s, 
 
 sortHands :: String -> String -> Ordering
 sortHands x y
-  | handVal x < handVal y = LT
-  | handVal x > handVal y = GT
+  | handVal (unJoke x) < handVal (unJoke y) = LT
+  | handVal (unJoke x) > handVal (unJoke y) = GT
   | otherwise = solveTie x y
 
-sortCards :: [String] -> [String]
-sortCards = sortBy sortHands
+replace :: String -> Char -> Char -> String
+replace [] _ _ = []
+replace (x:xs) old new
+  | x == old = new:replace xs old new
+  | otherwise = x:replace xs old new
+
+unJoke :: String -> String
+unJoke s = replace s 'J' most
+  where most = mostLetter s
+
+showHands :: [(String, Int)] -> String
+showHands xs = concatMap (\x -> fst (xs!!x) ++ "\n") [0..length xs - 1]
+
+getInfo :: String -> String
+getInfo s = fromRight [] sh
+  where sh = showHands <$> sHands
+        sHands = sortBy (\(x,_) (y,_) -> sortHands x y) <$> ins
+        ins = parse pFile "" s
 
 main = do
   block <- getContents
   print $ solve block
+--  putStr $ getInfo block
